@@ -1,6 +1,6 @@
-import { Effect, Random, pipe, Stream, Option, Record } from 'effect';
+import { Effect, Random, pipe, Stream, Option, Record, Console } from 'effect';
 import { createHash } from 'node:crypto';
-import { WebSdk } from '@effect/opentelemetry';
+import { NodeSdk } from '@effect/opentelemetry';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
 import { NodeRuntime } from '@effect/platform-node';
@@ -9,7 +9,7 @@ import { NodeRuntime } from '@effect/platform-node';
 const otlUrl = process.env.OTEL_URL ? `${process.env.OTEL_URL}/v1/traces` : undefined;
 
 // Set up tracing with the OpenTelemetry SDK
-const WebSdkLive = WebSdk.layer(() => ({
+const NodeSdkLive = NodeSdk.layer(() => ({
 
   resource: { serviceName: 'sandwich-finder' },
 
@@ -67,7 +67,7 @@ const blockStreamProgram = Stream.unfoldEffect(genesisBlock, (block) => pipe(
     Effect.tap(() => Effect.annotateCurrentSpan('block', block.blockHeight)),
     Effect.withSpan('gen-block'),
     Effect.tap(() => Effect.logInfo(`Block generated ${block.blockHeight}`)),
-    Effect.map((newBlock) => Option.some([block, newBlock]))
+    Effect.map(newBlock => Option.some([block, newBlock]))
   )
 );
 
@@ -102,17 +102,22 @@ const processAndSaveProgram = (block: Block) => pipe(
   Effect.fork);
 
 
-console.log('Starting program');
-const program = blockStreamProgram.pipe(
+const blockProcessPipeline = blockStreamProgram.pipe(
   Stream.mapEffect((block) => processAndSaveProgram(block)),
   Stream.withSpan('block-process-group'),
-  Stream.runDrain
+  Stream.runDrain,
+  Effect.provide(NodeSdkLive)
+);
+
+const program = pipe(
+  Effect.addFinalizer(() => Console.log('\nProgram exited')),
+  Effect.tap(Console.log('Program started')),
+  Effect.andThen(blockProcessPipeline),
+  Effect.scoped
 );
 
 
 // Run the program
-NodeRuntime.runMain(program.pipe(Effect.provide(WebSdkLive)));
+NodeRuntime.runMain(program);
 
-process.on('SIGINT', () => {
-  console.log('Stopping program');
-});
+
