@@ -102,7 +102,7 @@ const processAndSaveProgram = (block: Block) => pipe(
   Effect.fork);
 
 
-console.log('Starting program', process.env.OTEL_URL);
+console.log('Starting program');
 const program = blockStreamProgram.pipe(
   Stream.mapEffect((block) => processAndSaveProgram(block)),
   Stream.withSpan('block-process-group'),

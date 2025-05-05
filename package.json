@@ -20,7 +20,7 @@
     "@effect/platform-node": "^0.77.6",
     "@opentelemetry/exporter-trace-otlp-http": "^0.200.0",
     "@opentelemetry/sdk-trace-base": "^2.0.0",
-    "@opentelemetry/sdk-trace-web": "^2.0.0",
+    "@opentelemetry/sdk-trace-node": "^2.0.0",
     "effect": "3.14.18"
   },
   "devDependencies": {
