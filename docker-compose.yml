@@ -1,0 +1,38 @@
+services:
+  sandwich-finder:
+    build:
+      context: .
+      dockerfile: "Dockerfile"
+    container_name: "sandwich-finder"
+    depends_on:
+      - "jaeger"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "5"
+      driver: "json-file"
+    init: true
+    env_file:
+      - ".env"
+    stop_grace_period: "1s"
+    restart: "unless-stopped"
+    networks:
+      - "sandwich"
+
+  jaeger:
+    image: jaegertracing/jaeger:2.5.0
+    container_name: "jaeger"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    environment:
+      - LOG_LEVEL=debug
+    networks:
+      - "sandwich"
+
+
+networks:
+  sandwich:
+    name: "sandwich"
+    driver: "bridge"
