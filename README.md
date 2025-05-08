@@ -38,7 +38,7 @@ optionally persists findings - all with structured tracing and pluggable runtime
 |----------------------|-----------------------------------------------------------|----------------------|
 | `OTEL_URL`           | OTLP HTTP endpoint for traces export *see* `.env.example` | _http://jaeger:4318_ |
 
-1. Create a `.env` file or export in your shell
+1. Create a `.env` file or export in your shell `touch .env`
 2. Copy text from .env.example
 
 ## Usage
